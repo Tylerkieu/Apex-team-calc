@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Apex Legends Team Split Calculator</title>
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #1e1e2f;
+        color: #fff;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 40px;
+        margin: 0;
+      }
+
+      .container {
+        background-color: #2b2b3d;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+        max-width: 500px;
+        width: 100%;
+      }
+
+      h2 {
+        text-align: center;
+        margin-bottom: 20px;
+        color: #00ffd5;
+      }
+
+      label {
+        margin-top: 15px;
+        display: block;
+        font-weight: bold;
+      }
+
+      input {
+        width: 100%;
+        padding: 10px;
+        border-radius: 8px;
+        border: none;
+        margin-top: 5px;
+        font-size: 1rem;
+      }
+
+      button {
+        margin-top: 25px;
+        width: 100%;
+        background-color: #00ffd5;
+        color: #1e1e2f;
+        border: none;
+        border-radius: 8px;
+        padding: 12px;
+        font-size: 1.1rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+      }
+
+      button:hover {
+        background-color: #00cbb0;
+      }
+
+      .output {
+        margin-top: 25px;
+        padding: 20px;
+        background-color: #202031;
+        border-left: 5px solid #00ffd5;
+        border-radius: 8px;
+        font-size: 1rem;
+        line-height: 1.6;
+      }
+
+      .output strong {
+        color: #00ffd5;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>🛡️ Apex Legends Team Split Calculator</h2>
+
+      <label for="totalPlayers">Total players remaining (max 60):</label>
+      <input
+        type="number"
+        id="totalPlayers"
+        min="1"
+        max="60"
+        placeholder="e.g. 9"
+      />
+
+      <label for="myTeamSize">Your team size (max 3):</label>
+      <input
+        type="number"
+        id="myTeamSize"
+        min="1"
+        max="3"
+        placeholder="e.g. 3"
+      />
+
+      <label for="totalTeams">Total number of teams (including yours):</label>
+      <input
+        type="number"
+        id="totalTeams"
+        min="1"
+        max="20"
+        placeholder="e.g. 3"
+      />
+
+      <button onclick="calculateCombinations()">Calculate Combinations</button>
+
+      <div class="output" id="output"></div>
+    </div>
+
+    <script>
+      const MAX_PLAYERS = 60;
+      const MAX_TEAM_SIZE = 3;
+
+      function getCombinations(target, count, maxVal = MAX_TEAM_SIZE) {
+        const results = [];
+
+        function dfs(path, remaining, teamsLeft) {
+          if (teamsLeft === 0 && remaining === 0) {
+            results.push([...path]);
+            return;
+          }
+          if (teamsLeft === 0 || remaining <= 0) return;
+
+          for (let i = 1; i <= Math.min(maxVal, remaining); i++) {
+            dfs([...path, i], remaining - i, teamsLeft - 1);
+          }
+        }
+
+        dfs([], target, count);
+        return results;
+      }
+
+      function calculateCombinations() {
+        const totalPlayers = parseInt(
+          document.getElementById("totalPlayers").value
+        );
+        const myTeamSize = parseInt(
+          document.getElementById("myTeamSize").value
+        );
+        const totalTeams = parseInt(
+          document.getElementById("totalTeams").value
+        );
+        const output = document.getElementById("output");
+
+        output.innerHTML = "";
+
+        // Validation
+        if (isNaN(totalPlayers) || isNaN(myTeamSize) || isNaN(totalTeams)) {
+          output.innerHTML = "❌ Please enter all values.";
+          return;
+        }
+
+        if (totalPlayers > MAX_PLAYERS) {
+          output.innerHTML = `❌ Maximum total players is ${MAX_PLAYERS}.`;
+          return;
+        }
+
+        if (myTeamSize > MAX_TEAM_SIZE) {
+          output.innerHTML = `❌ Maximum players per team is ${MAX_TEAM_SIZE}.`;
+          return;
+        }
+
+        if (myTeamSize > totalPlayers) {
+          output.innerHTML = "❌ Your team can't be bigger than total players.";
+          return;
+        }
+
+        if (totalTeams < 1) {
+          output.innerHTML = "❌ There must be at least one team.";
+          return;
+        }
+
+        if (totalTeams === 1) {
+          if (myTeamSize === totalPlayers) {
+            output.innerHTML = `✅ Only your team is left with ${myTeamSize} players.`;
+          } else {
+            output.innerHTML = "❌ Total players do not match your team size.";
+          }
+          return;
+        }
+
+        const remainingPlayers = totalPlayers - myTeamSize;
+        const otherTeams = totalTeams - 1;
+
+        const combinations = getCombinations(remainingPlayers, otherTeams);
+
+        if (combinations.length === 0) {
+          output.innerHTML =
+            "❌ No valid combinations with current constraints.";
+          return;
+        }
+
+        let html = `<strong>✅ ${combinations.length} possible combinations:</strong><br><br>`;
+        combinations.forEach((combo) => {
+          html += `🔸 Your team: <strong>${myTeamSize}</strong> — Other teams: ${combo.join(
+            " and "
+          )}<br>`;
+        });
+
+        output.innerHTML = html;
+      }
+    </script>
+  </body>
+</html>
